@@ -1,12 +1,17 @@
+package basic;
+import tasks.*;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
 public class Manager {
-    public Map<Integer, Task> taskMap = new HashMap<>();
-    public Map<Integer, SubTask> subtaskMap = new HashMap<>();
-    public Map<Integer, EpicTask> epicMap = new HashMap<>();
-    public Map<Integer, Task> allTasksMap = new HashMap<>();
-    public HashMap<SubTask, Status> subtasksOneEpicMap = new HashMap<>();
+    private final Map<Integer, Task> taskMap = new HashMap<>();
+    private final Map<Integer, SubTask> subtaskMap = new HashMap<>();
+    private final Map<Integer, EpicTask> epicMap = new HashMap<>();
+    private final List<Task> allTasksList = new ArrayList<>();
+    private final List<Integer> subtasksOneEpicList = new ArrayList<>();
+    private final Map<Integer, Status> subtasksOneEpicMap = new HashMap<>();
 
     private int nextId = 0;
     public int getNextId() {
@@ -16,46 +21,44 @@ public class Manager {
     public void putNewTaskInMap(Task task) {
         taskMap.put(task.getId(), task);
     }
-    public void putNewSubtaskInMap(SubTask subtask) {
-        subtaskMap.put(subtask.getId(), subtask);
-        // меняем статус эпика, которому создали подзадачу
-        EpicTask subtaskEpictask = subtask.getSubtaskEpictask();
-        setStatusEpic(subtaskEpictask);
-        //меняем у этого эпика подзадачи через соотв. поле
-        HashMap<SubTask, Status> epictaskNewSubtasks  = selectSubtasksOneEpic(subtaskEpictask);
-        subtaskEpictask.setEpictaskSubtasks(epictaskNewSubtasks);
-    }
+
     public void putNewEpictaskInMap(EpicTask epictask) {
         epicMap.put(epictask.getId(), epictask);
-        setStatusEpic(epictask);
     }
 
-    public Map getListTasks() {
+    public void putNewSubtaskInMap(SubTask subtask) {
+        subtaskMap.put(subtask.getId(), subtask);
+        EpicTask subtaskEpictask = epicMap.get(subtask.getSubtaskEpictaskId());
+        updateEpictask(subtaskEpictask);
+    }
+
+    public List<Task> getListTasks() {
         if(taskMap != null) {
             for (int keyTask : taskMap.keySet()) {
-                allTasksMap.put(keyTask, taskMap.get(keyTask));
+                allTasksList.add(taskMap.get(keyTask));
             }
         }
         if(subtaskMap != null) {
             for (int keyTask : subtaskMap.keySet()) {
-                allTasksMap.put(keyTask, subtaskMap.get(keyTask));
+                allTasksList.add(subtaskMap.get(keyTask));
             }
         }
         if(epicMap != null) {
             for (int keyTask : epicMap.keySet()) {
-                allTasksMap.put(keyTask, epicMap.get(keyTask));
+                allTasksList.add(epicMap.get(keyTask));
             }
         }
-        // проверяем работу метода, возвращаем результат
-        if(allTasksMap.size() != 0) {
+        System.out.println("Проверяем работу метода getListTasks()");
+        if(allTasksList.size() != 0) {
             System.out.println("Список задач:");
-            for (Task task : allTasksMap.values()) {
-                System.out.println(task.name);
+            for (int i = 0; i < allTasksList.size(); i++) {
+                Task task = allTasksList.get(i);
+                System.out.println("Задача " + task.name);
             }
         } else {
             System.out.println("Список задач вывести невозможно, задачи отсутствуют!");
         }
-        return allTasksMap;
+        return allTasksList;
     }
 
     public void clearMapTasks() {
@@ -68,8 +71,8 @@ public class Manager {
         if(epicMap.size() != 0) {
             epicMap.clear();
         }
-        if(allTasksMap.size() != 0) {
-            allTasksMap.clear();
+        if(allTasksList.size() != 0) {
+            allTasksList.clear();
         }
     }
 
@@ -82,7 +85,7 @@ public class Manager {
         } else if(epicMap.containsKey(id)) {
             requiredTask = epicMap.get(id);
         }
-        // проверяем работу метода, возвращаем результат
+        System.out.println("Проверяем работу метода getRequiredTask()");
         if(requiredTask == null) {
             System.out.println("Задача с идентификатором " + id + " отсутствует!");
         } else {
@@ -96,21 +99,19 @@ public class Manager {
             taskMap.remove(id);
         } else if(subtaskMap.containsKey(id)) {
             SubTask requiredTask = subtaskMap.get(id);
-            EpicTask subtaskEpictask = requiredTask.getSubtaskEpictask();
+            EpicTask subtaskEpictask = epicMap.get(requiredTask.getSubtaskEpictaskId());
             subtaskMap.remove(id);
-            // изменяем статус и подзадачи эпика, в котором удалили искомую подзадачу
-            setStatusEpic(subtaskEpictask);
-            setSubtasksEpic(subtaskEpictask);
+            updateEpictask(subtaskEpictask);
         } else if(epicMap.containsKey(id)) {
-            // сначала удаляем подзадачи эпика, а потом сам эпик
             EpicTask epicTask = epicMap.get(id);
-            HashMap<SubTask, Status> epictaskSubtasks = epicTask.getEpictaskSubtasks();
-            for(SubTask subTask : epictaskSubtasks.keySet()) {
-                subtaskMap.remove(subTask);
+            List<Integer> epictaskSubtasks = epicTask.getEpictaskSubtasks();
+            for(int i = 0; i < epictaskSubtasks.size(); i++) {
+                int subtaskId = epictaskSubtasks.get(i);
+                subtaskMap.remove(subtaskId);
             }
             epicMap.remove(id);
         }
-        // проверяем работу метода
+        System.out.println("Проверяем работу метода removeTask()");
         getRequiredTask(id);
     }
 
@@ -119,30 +120,45 @@ public class Manager {
         putNewTaskInMap(newTask);
     }
     public void updateSubtask(SubTask oldTask, SubTask newTask) {
+        subtaskMap.remove(oldTask.getId());
         putNewSubtaskInMap(newTask);
-        removeTask(oldTask.getId());
-    }
-    public void updateEpictask(EpicTask oldTask, EpicTask newTask) {
-        removeTask(oldTask.getId());
-        putNewEpictaskInMap(newTask);
     }
 
-    public HashMap<SubTask, Status> selectSubtasksOneEpic(EpicTask epictask) {
-        subtasksOneEpicMap.clear();
+    public List<Integer> selectSubtasksOneEpic(EpicTask epictask) {
+        subtasksOneEpicList.clear();
         if(subtaskMap.size() != 0) {
             for (SubTask subtask : subtaskMap.values()) {
-                if (epictask.getId() == (subtask.getSubtaskEpictask()).getId()) {
-                    subtasksOneEpicMap.put(subtask, subtask.status);
+                if (epictask.getId() == subtask.getSubtaskEpictaskId()) {
+                    subtasksOneEpicList.add(subtask.getId());
                 }
             }
         } else {
             System.out.println("Подзадачи отсутствуют, отсортировать для определённого эпика невозможно!");
         }
+        return subtasksOneEpicList;
+    }
+
+    public void setSubtasksEpic(EpicTask epictask) {
+        List<Integer> epictaskNewSubtasks  = selectSubtasksOneEpic(epictask);
+        epictask.setEpictaskSubtasks(epictaskNewSubtasks);
+    }
+
+    public Map<Integer, Status> selectSubtasksOneEpicMap(EpicTask epictask) {
+        subtasksOneEpicMap.clear();
+        List<Integer> subTasks = epictask.getEpictaskSubtasks();
+        if (subTasks.size() != 0) {
+            for(int i = 0; i < subTasks.size(); i++) {
+                int subtaskId = subTasks.get(i);
+                subtasksOneEpicMap.put(subtaskId, (subtaskMap.get(subtaskId)).status);
+            }
+        } else {
+            System.out.println("Подзадачи у эпика отсутствуют, отсортировать их со статусом невозможно");
+        }
         return subtasksOneEpicMap;
     }
 
     public Status generateStatusEpic(EpicTask epictask) {
-        selectSubtasksOneEpic(epictask);
+        selectSubtasksOneEpicMap(epictask);
         Status statusEpic = null;
         boolean statusNew = subtasksOneEpicMap.containsValue(Status.NEW);
         boolean statusProgress = subtasksOneEpicMap.containsValue(Status.IN_PROGRESS);
@@ -162,9 +178,9 @@ public class Manager {
         epictask.setStatus(epictaskNewStatus);
     }
 
-    public void setSubtasksEpic(EpicTask epictask) {
-        HashMap<SubTask, Status> epictaskNewSubtasks  = selectSubtasksOneEpic(epictask);
-        epictask.setEpictaskSubtasks(epictaskNewSubtasks);
+    public void updateEpictask(EpicTask epictask) {
+        setSubtasksEpic(epictask);
+        setStatusEpic(epictask);
     }
 
 }
