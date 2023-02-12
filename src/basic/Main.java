@@ -1,40 +1,39 @@
 package basic;
 import tasks.*;
-
-import java.util.ArrayList;
+import managers.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        Manager manager = new Manager();
+        TaskManager taskManager = Managers.getDefault();
 
         System.out.println("Создаём две простые задачи.");
-        Task taskOne = new Task("Праздничн. обед", "Из 9 блюд на 10 персон", manager.getNextId(), Status.NEW);
-        manager.putNewTaskInMap(taskOne);
-        Task taskTwo = new Task("Генеральн.уборка", "На след. день после обеда", manager.getNextId(), Status.NEW);
-        manager.putNewTaskInMap(taskTwo);
+        Task taskOne = new Task("Праздничн. обед", "Из 9 блюд на 10 персон", taskManager.getNextId(), Status.NEW);
+        taskManager.putNewTaskInMap(taskOne);
+        Task taskTwo = new Task("Генеральн.уборка", "На след. день после обеда", taskManager.getNextId(), Status.NEW);
+        taskManager.putNewTaskInMap(taskTwo);
         System.out.println("Задачи:");
         printTask(taskOne);
         printTask(taskTwo);
 
         System.out.println("");
         System.out.println("Создаём два эпика без подзадач.");
-        EpicTask epicOne = new EpicTask("Путешествие", "Из Петербурга в Москву", manager.getNextId());
-        manager.putNewEpictaskInMap(epicOne);
-        EpicTask epicTwo = new EpicTask("Вернуться домой", "Транзитом через Минск", manager.getNextId()/*, manager.subtasksOneEpicList*/);
-        manager.putNewEpictaskInMap(epicTwo);
+        EpicTask epicOne = new EpicTask("Путешествие", "Из Петербурга в Москву", taskManager.getNextId());
+        taskManager.putNewEpictaskInMap(epicOne);
+        EpicTask epicTwo = new EpicTask("Вернуться домой", "Транзитом через Минск", taskManager.getNextId()/*, manager.subtasksOneEpicList*/);
+        taskManager.putNewEpictaskInMap(epicTwo);
         System.out.println("Эпики:");
         printEpicTask(epicOne);
         printEpicTask(epicTwo);
 
         System.out.println("");
         System.out.println("Создаём подзадачи для эпиков.");
-        SubTask subOne = new SubTask("Петербург-Москва", "Поезд", manager.getNextId(), Status.NEW, epicOne.getId());
-        manager.putNewSubtaskInMap(subOne);
-        SubTask subTwo = new SubTask("Москва-Минск", "Автобус", manager.getNextId(), Status.NEW, epicTwo.getId());
-        manager.putNewSubtaskInMap(subTwo);
-        SubTask subThree = new SubTask("Минск-Петербург", "Самолёт", manager.getNextId(), Status.NEW, epicTwo.getId());
-        manager.putNewSubtaskInMap(subThree);
+        SubTask subOne = new SubTask("Петербург-Москва", "Поезд", taskManager.getNextId(), Status.NEW, epicOne.getId());
+        taskManager.putNewSubtaskInMap(subOne);
+        SubTask subTwo = new SubTask("Москва-Минск", "Автобус", taskManager.getNextId(), Status.NEW, epicTwo.getId());
+        taskManager.putNewSubtaskInMap(subTwo);
+        SubTask subThree = new SubTask("Минск-Петербург", "Самолёт", taskManager.getNextId(), Status.NEW, epicTwo.getId());
+        taskManager.putNewSubtaskInMap(subThree);
         System.out.println("Эпики и их подзадачи:");
         printEpicTask(epicOne);
         printEpicTask(epicTwo);
@@ -44,12 +43,12 @@ public class Main {
 
         System.out.println("");
         System.out.println("Обновляем первую задачу, единственную подзадачу первого эпика, первую подзадачу второго эпика");
-        Task taskNull = new Task("Праздничн. обед", "Из 9 блюд на 10 персон", manager.getNextId(), Status.DONE);
-        manager.updateTask(taskOne, taskNull);
-        SubTask subFour = new SubTask("Петербург-Москва", "Поезд", manager.getNextId(), Status.DONE, epicOne.getId());
-        manager.updateSubtask(subOne, subFour);
-        SubTask subFive = new SubTask("Москва-Минск", "Автобус", manager.getNextId(), Status.IN_PROGRESS, epicTwo.getId());
-        manager.updateSubtask(subTwo, subFive);
+        Task taskNull = new Task("Праздничн. обед", "Из 9 блюд на 10 персон", taskManager.getNextId(), Status.DONE);
+        taskManager.updateTask(taskOne, taskNull);
+        SubTask subFour = new SubTask("Петербург-Москва", "Поезд", taskManager.getNextId(), Status.DONE, epicOne.getId());
+        taskManager.updateSubtask(subOne, subFour);
+        SubTask subFive = new SubTask("Москва-Минск", "Автобус", taskManager.getNextId(), Status.IN_PROGRESS, epicTwo.getId());
+        taskManager.updateSubtask(subTwo, subFive);
         System.out.println("После обновления:");
         System.out.println("Задачи:");
         printTask(taskNull);
@@ -64,8 +63,15 @@ public class Main {
 
         System.out.println("");
         System.out.println("Удаляем первый эпик (id 2), проверяем - ищем его и подзадачу (id 4)");
-        manager.removeTask(2);
-        manager.getRequiredTask(4);
+        taskManager.removeTask(2);
+        taskManager.getRequiredTask(4);
+
+        System.out.println("");
+        System.out.println("Просматриваем 10 произвольных задач и выводим список просмотренных задач");
+        for(int i = 0; i < 11; i++) {
+            taskManager.getRequiredTask(i);
+        }
+        taskManager.getHistory();
     }
 
     public static void printTask(Task task) {

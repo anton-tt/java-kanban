@@ -1,11 +1,12 @@
-package basic;
+package managers;
 import tasks.*;
+import basic.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-public class Manager {
+public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> taskMap = new HashMap<>();
     private final Map<Integer, SubTask> subtaskMap = new HashMap<>();
     private final Map<Integer, EpicTask> epicMap = new HashMap<>();
@@ -14,24 +15,27 @@ public class Manager {
     private final Map<Integer, Status> subtasksOneEpicMap = new HashMap<>();
 
     private int nextId = 0;
+    @Override
     public int getNextId() {
         return nextId++;
     }
 
+    @Override
     public void putNewTaskInMap(Task task) {
         taskMap.put(task.getId(), task);
     }
-
+    @Override
     public void putNewEpictaskInMap(EpicTask epictask) {
         epicMap.put(epictask.getId(), epictask);
     }
-
+    @Override
     public void putNewSubtaskInMap(SubTask subtask) {
         subtaskMap.put(subtask.getId(), subtask);
         EpicTask subtaskEpictask = epicMap.get(subtask.getSubtaskEpictaskId());
         updateEpictask(subtaskEpictask);
     }
 
+    @Override
     public List<Task> getListTasks() {
         if(taskMap != null) {
             for (int keyTask : taskMap.keySet()) {
@@ -61,6 +65,7 @@ public class Manager {
         return allTasksList;
     }
 
+    @Override
     public void clearMapTasks() {
         if(taskMap.size() != 0) {
             taskMap.clear();
@@ -76,6 +81,7 @@ public class Manager {
         }
     }
 
+    @Override
     public Task getRequiredTask(int id) {
         Task requiredTask = null;
         if(taskMap.containsKey(id)) {
@@ -89,11 +95,18 @@ public class Manager {
         if(requiredTask == null) {
             System.out.println("Задача с идентификатором " + id + " отсутствует!");
         } else {
+            Managers.getDefaultHistory().addViewedTask(requiredTask);
             System.out.println("Задача с идентификатором " + id + ": " + requiredTask.name);
         }
         return requiredTask;
     }
 
+    public List<Task> getHistory() {
+        return Managers.getDefaultHistory().getHistory();
+    }
+
+
+    @Override
     public void removeTask(int id) {
         if(taskMap.containsKey(id)) {
             taskMap.remove(id);
@@ -115,10 +128,12 @@ public class Manager {
         getRequiredTask(id);
     }
 
+    @Override
     public void updateTask(Task oldTask, Task newTask) {
         taskMap.remove(oldTask.getId());
         putNewTaskInMap(newTask);
     }
+    @Override
     public void updateSubtask(SubTask oldTask, SubTask newTask) {
         subtaskMap.remove(oldTask.getId());
         putNewSubtaskInMap(newTask);
@@ -157,6 +172,7 @@ public class Manager {
         return subtasksOneEpicMap;
     }
 
+    @Override
     public Status generateStatusEpic(EpicTask epictask) {
         selectSubtasksOneEpicMap(epictask);
         Status statusEpic = null;
@@ -178,6 +194,7 @@ public class Manager {
         epictask.setStatus(epictaskNewStatus);
     }
 
+    @Override
     public void updateEpictask(EpicTask epictask) {
         setSubtasksEpic(epictask);
         setStatusEpic(epictask);
