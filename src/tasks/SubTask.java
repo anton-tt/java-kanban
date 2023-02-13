@@ -4,7 +4,7 @@ import managers.*;
 import java.util.Objects;
 
 public class SubTask extends Task {
-    final private int epicTaskId;
+    private final int epicTaskId;
 
     public SubTask(String name, String description, int id, Status status, int epicTaskId) {
         super(name, description, id, status);
@@ -19,7 +19,7 @@ public class SubTask extends Task {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         SubTask otherSubTask = (SubTask) obj;
-        return Objects.equals(name, otherSubTask.name) && Objects.equals(description, otherSubTask.description) && Objects.equals(status, otherSubTask.status) && (getSubtaskEpictaskId() == getSubtaskEpictaskId()) && (getId() == otherSubTask.getId());
+        return Objects.equals(name, otherSubTask.name) && Objects.equals(description, otherSubTask.description) && Objects.equals(status, otherSubTask.status) && (getSubtaskEpictaskId() == otherSubTask.getSubtaskEpictaskId()) && (getId() == otherSubTask.getId());
     }
     @Override
     public int hashCode() {

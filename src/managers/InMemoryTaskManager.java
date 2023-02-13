@@ -37,23 +37,23 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getListTasks() {
-        if(taskMap != null) {
+        if(!taskMap.isEmpty()) {
             for (int keyTask : taskMap.keySet()) {
                 allTasksList.add(taskMap.get(keyTask));
             }
         }
-        if(subtaskMap != null) {
+        if(!subtaskMap.isEmpty()) {
             for (int keyTask : subtaskMap.keySet()) {
                 allTasksList.add(subtaskMap.get(keyTask));
             }
         }
-        if(epicMap != null) {
+        if(!epicMap.isEmpty()) {
             for (int keyTask : epicMap.keySet()) {
                 allTasksList.add(epicMap.get(keyTask));
             }
         }
         System.out.println("Проверяем работу метода getListTasks()");
-        if(allTasksList.size() != 0) {
+        if(!allTasksList.isEmpty()) {
             System.out.println("Список задач:");
             for (int i = 0; i < allTasksList.size(); i++) {
                 Task task = allTasksList.get(i);
@@ -67,16 +67,16 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void clearMapTasks() {
-        if(taskMap.size() != 0) {
+        if(!taskMap.isEmpty()) {
             taskMap.clear();
         }
-        if(subtaskMap.size() != 0) {
+        if(!subtaskMap.isEmpty()) {
             subtaskMap.clear();
         }
-        if(epicMap.size() != 0) {
+        if(!epicMap.isEmpty()) {
             epicMap.clear();
         }
-        if(allTasksList.size() != 0) {
+        if(!allTasksList.isEmpty()) {
             allTasksList.clear();
         }
     }
@@ -96,6 +96,7 @@ public class InMemoryTaskManager implements TaskManager {
             System.out.println("Задача с идентификатором " + id + " отсутствует!");
         } else {
             Managers.getDefaultHistory().addViewedTask(requiredTask);
+
             System.out.println("Задача с идентификатором " + id + ": " + requiredTask.name);
         }
         return requiredTask;
@@ -141,7 +142,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     public List<Integer> selectSubtasksOneEpic(EpicTask epictask) {
         subtasksOneEpicList.clear();
-        if(subtaskMap.size() != 0) {
+        if(!subtaskMap.isEmpty()) {
             for (SubTask subtask : subtaskMap.values()) {
                 if (epictask.getId() == subtask.getSubtaskEpictaskId()) {
                     subtasksOneEpicList.add(subtask.getId());
@@ -161,7 +162,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Map<Integer, Status> selectSubtasksOneEpicMap(EpicTask epictask) {
         subtasksOneEpicMap.clear();
         List<Integer> subTasks = epictask.getEpictaskSubtasks();
-        if (subTasks.size() != 0) {
+        if (!subTasks.isEmpty()) {
             for(int i = 0; i < subTasks.size(); i++) {
                 int subtaskId = subTasks.get(i);
                 subtasksOneEpicMap.put(subtaskId, (subtaskMap.get(subtaskId)).status);
