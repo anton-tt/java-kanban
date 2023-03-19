@@ -67,11 +67,20 @@ public class Main {
         taskManager.getRequiredTask(4);
 
         System.out.println("");
-        System.out.println("Просматриваем 10 произвольных задач и выводим список просмотренных задач");
+        System.out.println("Просматриваем 10 произвольных задач (+ дополнительно) и выводим список просмотренных задач");
         for(int i = 0; i < 11; i++) {
             taskManager.getRequiredTask(i);
         }
+        taskManager.getRequiredTask(1);
+        taskManager.getRequiredTask(3);
+        taskManager.getRequiredTask(7);
+        taskManager.getRequiredTask(8);
+        taskManager.getRequiredTask(7);
+        taskManager.getRequiredTask(1);
+        taskManager.getRequiredTask(3);
+        taskManager.getRequiredTask(13);
         taskManager.getHistory();
+
     }
 
     public static void printTask(Task task) {

@@ -1,40 +1,99 @@
 package managers;
 
+import java.util.*;
 import tasks.Task;
-import java.util.LinkedList;
-import java.util.List;
+import basic.Node;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    public final List<Task> viewedTasksList = new LinkedList<>();
+    final Map<Integer, Node> nodeMap = new HashMap<>();
+    final CustomLinkedList viewedTasksList = new CustomLinkedList();
+
 
     @Override
     public void addViewedTask(Task task) {
-        int listSize = viewedTasksList.size();
-        if(listSize == 10) {
-            viewedTasksList.remove(0);
-            System.out.println("Список просмотренных задач заполнен, для сохранения новой задачи удалена самая старая из сохранённых задач");
+        int taskId = task.getId();
+        if (nodeMap.containsKey(taskId)) {
+           removeRecurringTask(taskId);
         }
-        System.out.println("Искомая задача с id " + task.getId() + " сохранена в списке просмотренных задач");
-        viewedTasksList.add(task);
-    }
-
-    public void printAddViewedTask(Task task) {
-        addViewedTask(task);
-        System.out.println("Искомая задача с id " + task.getId() + " сохранена в списке просмотренных задач");
+        Node nodeAdd = viewedTasksList.linkLast(task);
+        nodeMap.put(taskId, nodeAdd);
     }
 
     @Override
     public List<Task> getHistory() {
-        if(!viewedTasksList.isEmpty()) {
+        List<Task> listTask = viewedTasksList.getViewedTasks();
+
+        if (!listTask.isEmpty()) {
             System.out.println("Список просмотренных задач:");
-            for (int i = 0; i < viewedTasksList.size(); i++) {
-                Task task = viewedTasksList.get(i);
-                System.out.println("Задача " + task.name);
+            for (int i = 0; i < listTask.size(); i++) {
+                Task task = listTask.get(i);
+                System.out.println("Задача ID " + task.getId() + ": " + task.name);
             }
         } else {
             System.out.println("Список просмотренных задач вывести невозможно, задачи отсутствуют!");
         }
-        return viewedTasksList;
+        return listTask;
+    }
+
+    @Override
+    public void removeRecurringTask(int id) {
+        Node nodeRemove = nodeMap.get(id);
+        viewedTasksList.removeNode(nodeRemove);
+        nodeMap.remove(id);
+    }
+
+    public static class CustomLinkedList {
+        public Node head;
+        public Node tail;
+        int size = 0;
+
+        Node linkLast(Task task) {
+            Node newNode = null;
+            if(head == null) {
+                newNode = new Node(null, task, null);
+                head = newNode;
+            } else if (head.data != null & head.next == null) {
+                newNode = new Node(head, task, null);
+                tail = newNode;
+                tail.prev = head;
+                head.next = tail;
+            } else if (head.data != null & head.next != null) {
+                Node oldTail = tail;
+                newNode = new Node(oldTail, task, null);
+                tail = newNode;
+                tail.prev = oldTail;
+                oldTail.next = tail;
+            }
+            size++;
+            return newNode;
+        }
+
+        List<Task> getViewedTasks() {
+            List<Task> viewedTasksList = new ArrayList<>();
+            Node currentNode = head;
+            while (currentNode != null) {
+                viewedTasksList.add(currentNode.data);
+                currentNode = currentNode.next;
+            }
+            return viewedTasksList;
+        }
+
+       void removeNode(Node node) {
+           if (node.prev == null & node.next != null) {
+               (node.next).prev = null;
+                head = node.next;
+                node = null;
+           } else if (node.prev != null & node.next == null) {
+               (node.prev).next = null;
+                tail = null;
+                node = null;
+           } else if (node.prev != null & node.next != null) {
+                (node.prev).next = node.next;
+                (node.next).prev = node.prev;
+                node = null;
+           }
+           size--;
+       }
     }
 
 }
