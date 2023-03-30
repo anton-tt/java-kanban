@@ -1,4 +1,5 @@
 package managers;
+
 import tasks.*;
 import basic.*;
 import java.util.List;
@@ -7,12 +8,14 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final Map<Integer, Task> taskMap = new HashMap<>();
-    private final Map<Integer, SubTask> subtaskMap = new HashMap<>();
-    private final Map<Integer, EpicTask> epicMap = new HashMap<>();
-    private final List<Task> allTasksList = new ArrayList<>();
-    private final List<Integer> subtasksOneEpicList = new ArrayList<>();
-    private final Map<Integer, Status> subtasksOneEpicMap = new HashMap<>();
+
+    private HistoryManager historyManager = Managers.getDefaultHistory();
+
+    protected final Map<Integer, Task> taskMap = new HashMap<>();
+    protected final Map<Integer, SubTask> subtaskMap = new HashMap<>();
+    protected final Map<Integer, EpicTask> epicMap = new HashMap<>();
+    protected final List<Task> allTasksList = new ArrayList<>();
+    protected final Map<Integer, Status> subtasksOneEpicMap = new HashMap<>();
 
     private int nextId = 0;
     @Override
@@ -52,7 +55,6 @@ public class InMemoryTaskManager implements TaskManager {
                 allTasksList.add(epicMap.get(keyTask));
             }
         }
-        System.out.println("Проверяем работу метода getListTasks()");
         if(!allTasksList.isEmpty()) {
             System.out.println("Список задач:");
             for (int i = 0; i < allTasksList.size(); i++) {
@@ -91,21 +93,18 @@ public class InMemoryTaskManager implements TaskManager {
         } else if(epicMap.containsKey(id)) {
             requiredTask = epicMap.get(id);
         }
-        System.out.println("Проверяем работу метода getRequiredTask()");
         if(requiredTask == null) {
             System.out.println("Задача с идентификатором " + id + " отсутствует!");
         } else {
-            Managers.getDefaultHistory().addViewedTask(requiredTask);
-
+            historyManager.addViewedTask(requiredTask);
             System.out.println("Задача с идентификатором " + id + ": " + requiredTask.name);
         }
         return requiredTask;
     }
 
     public List<Task> getHistory() {
-        return Managers.getDefaultHistory().getHistory();
+        return historyManager.getHistory();
     }
-
 
     @Override
     public void removeTask(int id) {
@@ -125,8 +124,6 @@ public class InMemoryTaskManager implements TaskManager {
             }
             epicMap.remove(id);
         }
-        System.out.println("Проверяем работу метода removeTask()");
-        getRequiredTask(id);
     }
 
     @Override
@@ -134,6 +131,7 @@ public class InMemoryTaskManager implements TaskManager {
         taskMap.remove(oldTask.getId());
         putNewTaskInMap(newTask);
     }
+
     @Override
     public void updateSubtask(SubTask oldTask, SubTask newTask) {
         subtaskMap.remove(oldTask.getId());
@@ -141,8 +139,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public List<Integer> selectSubtasksOneEpic(EpicTask epictask) {
-        subtasksOneEpicList.clear();
-        if(!subtaskMap.isEmpty()) {
+        List<Integer> subtasksOneEpicList = new ArrayList<>();
+        Map<Integer, Status> subtasksEpicMap = selectSubtasksOneEpicMap(epictask);
+        if(!subtasksEpicMap.isEmpty()) {
             for (SubTask subtask : subtaskMap.values()) {
                 if (epictask.getId() == subtask.getSubtaskEpictaskId()) {
                     subtasksOneEpicList.add(subtask.getId());
@@ -161,13 +160,16 @@ public class InMemoryTaskManager implements TaskManager {
 
     public Map<Integer, Status> selectSubtasksOneEpicMap(EpicTask epictask) {
         subtasksOneEpicMap.clear();
-        List<Integer> subTasks = epictask.getEpictaskSubtasks();
-        if (!subTasks.isEmpty()) {
-            for(int i = 0; i < subTasks.size(); i++) {
-                int subtaskId = subTasks.get(i);
-                subtasksOneEpicMap.put(subtaskId, (subtaskMap.get(subtaskId)).status);
+        int idEpic = epictask.getId();
+        if (!subtaskMap.isEmpty()) {
+            for (SubTask task : subtaskMap.values()) {
+                if (task.getSubtaskEpictaskId() == idEpic) {
+                    int subtaskId = task.getId();
+                    Status statusSubtask = task.status;
+                    subtasksOneEpicMap.put(subtaskId, statusSubtask);
+                }
             }
-        } else {
+        }else {
             System.out.println("Подзадачи у эпика отсутствуют, отсортировать их со статусом невозможно");
         }
         return subtasksOneEpicMap;

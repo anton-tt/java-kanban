@@ -1,11 +1,13 @@
 package basic;
+
 import tasks.*;
 import managers.*;
+import java.io.File;
 
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager taskManager = Managers.getDefault();
+        TaskManager taskManager = FileBackedTasksManager.loadFromFile(new File("resource\\fileWriter.csv"));
 
         System.out.println("Создаём две простые задачи.");
         Task taskOne = new Task("Праздничн. обед", "Из 9 блюд на 10 персон", taskManager.getNextId(), Status.NEW);
@@ -20,7 +22,7 @@ public class Main {
         System.out.println("Создаём два эпика без подзадач.");
         EpicTask epicOne = new EpicTask("Путешествие", "Из Петербурга в Москву", taskManager.getNextId());
         taskManager.putNewEpictaskInMap(epicOne);
-        EpicTask epicTwo = new EpicTask("Вернуться домой", "Транзитом через Минск", taskManager.getNextId()/*, manager.subtasksOneEpicList*/);
+        EpicTask epicTwo = new EpicTask("Вернуться домой", "Транзитом через Минск", taskManager.getNextId());
         taskManager.putNewEpictaskInMap(epicTwo);
         System.out.println("Эпики:");
         printEpicTask(epicOne);
@@ -62,10 +64,11 @@ public class Main {
         printSubTask(subFive);
 
         System.out.println("");
-        System.out.println("Удаляем первый эпик (id 2), проверяем - ищем его и подзадачу (id 4)");
+        System.out.println("Удаляем первый эпик (id 2), проверяем - ищем его и подзадачу (id 8)");
         taskManager.removeTask(2);
-        taskManager.getRequiredTask(4);
-
+        taskManager.getRequiredTask(8);
+        taskManager.getRequiredTask(6);
+        taskManager.getRequiredTask(9);
         System.out.println("");
         System.out.println("Просматриваем 10 произвольных задач (+ дополнительно) и выводим список просмотренных задач");
         for(int i = 0; i < 11; i++) {
@@ -75,12 +78,11 @@ public class Main {
         taskManager.getRequiredTask(3);
         taskManager.getRequiredTask(7);
         taskManager.getRequiredTask(8);
-        taskManager.getRequiredTask(7);
         taskManager.getRequiredTask(1);
         taskManager.getRequiredTask(3);
         taskManager.getRequiredTask(13);
+        taskManager.getRequiredTask(7);
         taskManager.getHistory();
-
     }
 
     public static void printTask(Task task) {

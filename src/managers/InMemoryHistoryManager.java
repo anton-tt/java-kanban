@@ -82,15 +82,12 @@ public class InMemoryHistoryManager implements HistoryManager {
            if (node.prev == null & node.next != null) {
                (node.next).prev = null;
                 head = node.next;
-                node = null;
            } else if (node.prev != null & node.next == null) {
                (node.prev).next = null;
                 tail = null;
-                node = null;
            } else if (node.prev != null & node.next != null) {
                 (node.prev).next = node.next;
                 (node.next).prev = node.prev;
-                node = null;
            }
            size--;
        }
