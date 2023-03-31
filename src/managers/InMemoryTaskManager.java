@@ -41,18 +41,18 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getListTasks() {
         if(!taskMap.isEmpty()) {
-            for (int keyTask : taskMap.keySet()) {
-                allTasksList.add(taskMap.get(keyTask));
+            for (Map.Entry<Integer, Task> entry : taskMap.entrySet()) {
+                allTasksList.add(entry.getValue());
             }
         }
         if(!subtaskMap.isEmpty()) {
-            for (int keyTask : subtaskMap.keySet()) {
-                allTasksList.add(subtaskMap.get(keyTask));
+            for (Map.Entry<Integer, SubTask> entry : subtaskMap.entrySet()) {
+                allTasksList.add(entry.getValue());
             }
         }
         if(!epicMap.isEmpty()) {
-            for (int keyTask : epicMap.keySet()) {
-                allTasksList.add(epicMap.get(keyTask));
+            for (Map.Entry<Integer, EpicTask> entry : epicMap.entrySet()) {
+                allTasksList.add(entry.getValue());
             }
         }
         if(!allTasksList.isEmpty()) {

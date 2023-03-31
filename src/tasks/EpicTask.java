@@ -1,13 +1,10 @@
 package tasks;
 import basic.*;
-import managers.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class EpicTask extends Task {
-    private Status status;
     private List<Integer> subTasks;
 
     public EpicTask(String name, String description, int id) {

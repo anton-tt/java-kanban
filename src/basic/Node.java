@@ -9,8 +9,8 @@ public class Node {
 
 
     public Node(Node prev, Task data, Node next) {
-        this.prev = null;
+        this.prev = prev;
         this.data = data;
-        this.next = null;
+        this.next = next;
     }
 }

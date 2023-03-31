@@ -52,12 +52,12 @@ public class InMemoryHistoryManager implements HistoryManager {
             if(head == null) {
                 newNode = new Node(null, task, null);
                 head = newNode;
-            } else if (head.data != null & head.next == null) {
+            } else if (head.data != null && head.next == null) {
                 newNode = new Node(head, task, null);
                 tail = newNode;
                 tail.prev = head;
                 head.next = tail;
-            } else if (head.data != null & head.next != null) {
+            } else if (head.data != null && head.next != null) {
                 Node oldTail = tail;
                 newNode = new Node(oldTail, task, null);
                 tail = newNode;
@@ -79,13 +79,13 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
 
        void removeNode(Node node) {
-           if (node.prev == null & node.next != null) {
+           if (node.prev == null && node.next != null) {
                (node.next).prev = null;
                 head = node.next;
-           } else if (node.prev != null & node.next == null) {
+           } else if (node.prev != null && node.next == null) {
                (node.prev).next = null;
                 tail = null;
-           } else if (node.prev != null & node.next != null) {
+           } else if (node.prev != null && node.next != null) {
                 (node.prev).next = node.next;
                 (node.next).prev = node.prev;
            }
