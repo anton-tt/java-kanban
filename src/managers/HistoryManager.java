@@ -1,4 +1,5 @@
 package managers;
+
 import tasks.*;
 import java.util.List;
 
@@ -8,4 +9,5 @@ public interface HistoryManager {
     List<Task> getHistory();
 
     void removeRecurringTask(int id);
+
 }

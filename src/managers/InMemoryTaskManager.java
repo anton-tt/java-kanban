@@ -2,10 +2,10 @@ package managers;
 
 import tasks.*;
 import basic.*;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+
+import java.util.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -15,70 +15,103 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, SubTask> subtaskMap = new HashMap<>();
     protected final Map<Integer, EpicTask> epicMap = new HashMap<>();
     protected final List<Task> allTasksList = new ArrayList<>();
-    protected final Map<Integer, Status> subtasksOneEpicMap = new HashMap<>();
+    Set<Task> prioritizedSet = new TreeSet<>(Comparator.comparing(Task::getStartTime));
+    List<Task> notPrioritizedList = new ArrayList<>();
 
     private int nextId = 0;
+
     @Override
     public int getNextId() {
         return nextId++;
     }
 
     @Override
-    public void putNewTaskInMap(Task task) {
-        taskMap.put(task.getId(), task);
+    public LocalDateTime generateStartTimeTask(int year, int month, int day, int hour, int minute) {
+        LocalDateTime startTime = LocalDateTime.of(year, month, day, hour, minute);
+        return startTime;
     }
+
+    @Override
+    public Duration generateDurationTask(long minutes) {
+        Duration duration = Duration.ofMinutes(minutes);
+        return duration;
+    }
+
+    public LocalDateTime generateEndTimeTask(Task task) {
+        LocalDateTime endTime = task.getEndTime();
+        if (endTime == null) {
+            LocalDateTime startTime = task.getStartTime();
+            Duration duration = task.getDuration();
+            endTime = startTime.plus(duration);
+        }
+        return endTime;
+    }
+
+    @Override
+    public void putNewTaskInMap(Task task) {
+        LocalDateTime endTime = generateEndTimeTask(task);
+        task.setEndTime(endTime);
+        if (sortPriorityTasks(task)) {
+            taskMap.put(task.getId(), task);
+        }
+    }
+
     @Override
     public void putNewEpictaskInMap(EpicTask epictask) {
-        epicMap.put(epictask.getId(), epictask);
+        if (sortPriorityTasks(epictask)) {
+            epicMap.put(epictask.getId(), epictask);
+        }
     }
+
     @Override
     public void putNewSubtaskInMap(SubTask subtask) {
-        subtaskMap.put(subtask.getId(), subtask);
-        EpicTask subtaskEpictask = epicMap.get(subtask.getSubtaskEpictaskId());
-        updateEpictask(subtaskEpictask);
+        LocalDateTime endTime = generateEndTimeTask(subtask);
+        subtask.setEndTime(endTime);
+        if (sortPriorityTasks(subtask)) {
+            subtaskMap.put(subtask.getId(), subtask);
+            EpicTask subtaskEpictask = epicMap.get(subtask.getSubtaskEpictaskId());
+            if(notPrioritizedList.contains(subtaskEpictask)) {
+                removePrioritizedTask(subtaskEpictask);
+            }
+            updateEpictask(subtaskEpictask);
+        }
     }
 
     @Override
     public List<Task> getListTasks() {
-        if(!taskMap.isEmpty()) {
+        if (!taskMap.isEmpty()) {
             for (Map.Entry<Integer, Task> entry : taskMap.entrySet()) {
                 allTasksList.add(entry.getValue());
             }
         }
-        if(!subtaskMap.isEmpty()) {
+        if (!subtaskMap.isEmpty()) {
             for (Map.Entry<Integer, SubTask> entry : subtaskMap.entrySet()) {
                 allTasksList.add(entry.getValue());
             }
         }
-        if(!epicMap.isEmpty()) {
+        if (!epicMap.isEmpty()) {
             for (Map.Entry<Integer, EpicTask> entry : epicMap.entrySet()) {
                 allTasksList.add(entry.getValue());
             }
         }
-        if(!allTasksList.isEmpty()) {
-            System.out.println("Список задач:");
-            for (int i = 0; i < allTasksList.size(); i++) {
-                Task task = allTasksList.get(i);
-                System.out.println("Задача " + task.name);
-            }
-        } else {
+        /*if (allTasksList.isEmpty()) {
             System.out.println("Список задач вывести невозможно, задачи отсутствуют!");
-        }
+        }*/
         return allTasksList;
     }
 
     @Override
     public void clearMapTasks() {
-        if(!taskMap.isEmpty()) {
+        if (!taskMap.isEmpty()) {
             taskMap.clear();
         }
-        if(!subtaskMap.isEmpty()) {
+        if (!subtaskMap.isEmpty()) {
             subtaskMap.clear();
         }
-        if(!epicMap.isEmpty()) {
+        if (!epicMap.isEmpty()) {
             epicMap.clear();
         }
-        if(!allTasksList.isEmpty()) {
+        if (!allTasksList.isEmpty()) {
             allTasksList.clear();
         }
     }
@@ -86,18 +119,28 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getRequiredTask(int id) {
         Task requiredTask = null;
-        if(taskMap.containsKey(id)) {
+        if (taskMap.containsKey(id)) {
             requiredTask = taskMap.get(id);
-        } else if(subtaskMap.containsKey(id)) {
+        } else if (subtaskMap.containsKey(id)) {
             requiredTask = subtaskMap.get(id);
-        } else if(epicMap.containsKey(id)) {
+        } else if (epicMap.containsKey(id)) {
             requiredTask = epicMap.get(id);
         }
-        if(requiredTask == null) {
-            System.out.println("Задача с идентификатором " + id + " отсутствует!");
-        } else {
+        if (requiredTask != null) {
             historyManager.addViewedTask(requiredTask);
-            System.out.println("Задача с идентификатором " + id + ": " + requiredTask.name);
+        }
+        return requiredTask;
+    }
+
+    @Override
+    public Task discoverTask(int id) {
+        Task requiredTask = null;
+        if (taskMap.containsKey(id)) {
+            requiredTask = taskMap.get(id);
+        } else if (subtaskMap.containsKey(id)) {
+            requiredTask = subtaskMap.get(id);
+        } else if (epicMap.containsKey(id)) {
+            requiredTask = epicMap.get(id);
         }
         return requiredTask;
     }
@@ -108,83 +151,109 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeTask(int id) {
-        if(taskMap.containsKey(id)) {
+        if (taskMap.containsKey(id)) {
+            Task removeTask = taskMap.get(id);
+            removePrioritizedTask(removeTask);
             taskMap.remove(id);
-        } else if(subtaskMap.containsKey(id)) {
-            SubTask requiredTask = subtaskMap.get(id);
-            EpicTask subtaskEpictask = epicMap.get(requiredTask.getSubtaskEpictaskId());
+        } else if (subtaskMap.containsKey(id)) {
+            SubTask removeSubtask = subtaskMap.get(id);
+            EpicTask subtaskEpictask = epicMap.get(removeSubtask.getSubtaskEpictaskId());
             subtaskMap.remove(id);
+            if(subtaskEpictask.getEpictaskSubtasks().isEmpty()) {
+                notPrioritizedList.add(subtaskEpictask);
+            }
             updateEpictask(subtaskEpictask);
-        } else if(epicMap.containsKey(id)) {
+        } else if (epicMap.containsKey(id)) {
             EpicTask epicTask = epicMap.get(id);
             List<Integer> epictaskSubtasks = epicTask.getEpictaskSubtasks();
-            for(int i = 0; i < epictaskSubtasks.size(); i++) {
+            for (int i = 0; i < epictaskSubtasks.size(); i++) {
                 int subtaskId = epictaskSubtasks.get(i);
+                Task removeSubtask  = subtaskMap.get(subtaskId);
+                removePrioritizedTask(removeSubtask);
                 subtaskMap.remove(subtaskId);
             }
+            removePrioritizedTask(epicTask);
             epicMap.remove(id);
+        }
+    }
+
+    public void removePrioritizedTask(Task task) {
+        if (!notPrioritizedList.isEmpty() && notPrioritizedList.contains(task)) {
+            notPrioritizedList.remove(task);
+        } else if (!prioritizedSet.isEmpty() && prioritizedSet.contains(task)) {
+            prioritizedSet.remove(task);
         }
     }
 
     @Override
     public void updateTask(Task oldTask, Task newTask) {
         taskMap.remove(oldTask.getId());
+        removePrioritizedTask(oldTask);
         putNewTaskInMap(newTask);
+
     }
 
     @Override
     public void updateSubtask(SubTask oldTask, SubTask newTask) {
         subtaskMap.remove(oldTask.getId());
+        removePrioritizedTask(oldTask);
         putNewSubtaskInMap(newTask);
     }
 
-    public List<Integer> selectSubtasksOneEpic(EpicTask epictask) {
-        List<Integer> subtasksOneEpicList = new ArrayList<>();
-        Map<Integer, Status> subtasksEpicMap = selectSubtasksOneEpicMap(epictask);
-        if(!subtasksEpicMap.isEmpty()) {
-            for (SubTask subtask : subtaskMap.values()) {
-                if (epictask.getId() == subtask.getSubtaskEpictaskId()) {
-                    subtasksOneEpicList.add(subtask.getId());
+    @Override
+    public void updateEpictask(EpicTask epictask) {
+        setSubtasksEpic(epictask);
+        setStatusEpic(epictask);
+        setStartTimeEpic(epictask);
+        setDurationEpic(epictask);
+        setEndTimeEpic(epictask);
+        sortPriorityTasks(epictask);
+    }
+
+
+    public Map<Integer, SubTask> selectSubtasksOneEpic(EpicTask epictask) {
+        int epictaskId = epictask.getId();
+        Map<Integer, SubTask> subtasksOneEpic = new HashMap<>();
+        if (!subtaskMap.isEmpty()) {
+            for (Map.Entry<Integer, SubTask> entry : subtaskMap.entrySet()) {
+                int subtaskEpictaskId = (entry.getValue()).getSubtaskEpictaskId();
+                if (epictaskId == subtaskEpictaskId) {
+                    subtasksOneEpic.put(entry.getKey(), entry.getValue());
                 }
             }
-        } else {
-            System.out.println("Подзадачи отсутствуют, отсортировать для определённого эпика невозможно!");
         }
-        return subtasksOneEpicList;
+        return subtasksOneEpic;
+    }
+
+    public List<Integer> generateSubtasksOneEpic(EpicTask epictask) {
+        Map<Integer, SubTask> subtasksOneEpic = selectSubtasksOneEpic(epictask);
+        List<Integer> subtasksList = new ArrayList<>();
+        if (!subtasksOneEpic.isEmpty()) {
+            subtasksList.addAll(subtasksOneEpic.keySet());
+        }
+        return subtasksList;
     }
 
     public void setSubtasksEpic(EpicTask epictask) {
-        List<Integer> epictaskNewSubtasks  = selectSubtasksOneEpic(epictask);
+        List<Integer> epictaskNewSubtasks = generateSubtasksOneEpic(epictask);
         epictask.setEpictaskSubtasks(epictaskNewSubtasks);
     }
 
-    public Map<Integer, Status> selectSubtasksOneEpicMap(EpicTask epictask) {
-        subtasksOneEpicMap.clear();
-        int idEpic = epictask.getId();
-        if (!subtaskMap.isEmpty()) {
-            for (SubTask task : subtaskMap.values()) {
-                if (task.getSubtaskEpictaskId() == idEpic) {
-                    int subtaskId = task.getId();
-                    Status statusSubtask = task.status;
-                    subtasksOneEpicMap.put(subtaskId, statusSubtask);
-                }
-            }
-        }else {
-            System.out.println("Подзадачи у эпика отсутствуют, отсортировать их со статусом невозможно");
-        }
-        return subtasksOneEpicMap;
-    }
-
-    @Override
     public Status generateStatusEpic(EpicTask epictask) {
-        selectSubtasksOneEpicMap(epictask);
         Status statusEpic = null;
-        boolean statusNew = subtasksOneEpicMap.containsValue(Status.NEW);
-        boolean statusProgress = subtasksOneEpicMap.containsValue(Status.IN_PROGRESS);
-        boolean statusDone = subtasksOneEpicMap.containsValue(Status.DONE);
-        if(statusDone && !statusNew && !statusProgress) {
+        Map<Integer, SubTask> subtasksOneEpic = selectSubtasksOneEpic(epictask);
+        Map<Integer, Status> subtasksStatus = new HashMap<>();
+        if (!subtasksOneEpic.isEmpty()) {
+            for (Map.Entry<Integer, SubTask> entry : subtasksOneEpic.entrySet()) {
+                subtasksStatus.put(entry.getKey(), (entry.getValue()).status);
+            }
+        }
+        boolean statusNew = subtasksStatus.containsValue(Status.NEW);
+        boolean statusProgress = subtasksStatus.containsValue(Status.IN_PROGRESS);
+        boolean statusDone = subtasksStatus.containsValue(Status.DONE);
+        if (statusDone && !statusNew && !statusProgress) {
             statusEpic = Status.DONE;
-        } else if((subtasksOneEpicMap.size() == 0 || statusNew) && !statusDone && !statusProgress) {
+        } else if ((subtasksStatus.size() == 0 || statusNew) && !statusDone && !statusProgress) {
             statusEpic = Status.NEW;
         } else {
             statusEpic = Status.IN_PROGRESS;
@@ -192,15 +261,140 @@ public class InMemoryTaskManager implements TaskManager {
         return statusEpic;
     }
 
+    @Override
     public void setStatusEpic(EpicTask epictask) {
         Status epictaskNewStatus = generateStatusEpic(epictask);
         epictask.setStatus(epictaskNewStatus);
     }
 
+    public LocalDateTime generateStartTimeEpic(EpicTask epictask) {
+        LocalDateTime startTime = null;
+        Map<Integer, SubTask> subtasksOneEpic = selectSubtasksOneEpic(epictask);
+        if (!subtasksOneEpic.isEmpty()) {
+            for (SubTask task : subtasksOneEpic.values()) {
+                LocalDateTime time = task.getStartTime();
+                if (startTime == null || startTime.isAfter(time)) {
+                    startTime = time;
+                }
+            }
+        }
+        return startTime;
+    }
     @Override
-    public void updateEpictask(EpicTask epictask) {
-        setSubtasksEpic(epictask);
-        setStatusEpic(epictask);
+    public void setStartTimeEpic(EpicTask epictask) {
+        LocalDateTime newEpictaskStartTime = generateStartTimeEpic(epictask);
+        epictask.setStartTime(newEpictaskStartTime);
+    }
+
+    public Duration generateDurationEpic(EpicTask epictask) {
+        Duration durationEpic = null;
+        Map<Integer, SubTask> subtasksOneEpic = selectSubtasksOneEpic(epictask);
+        if (!subtasksOneEpic.isEmpty()) {
+            for (SubTask task : subtasksOneEpic.values()) {
+                Duration durationSubtask = task.getDuration();
+                if (durationEpic == null) {
+                    durationEpic = durationSubtask;
+                } else {
+                    durationEpic = durationEpic.plus(durationSubtask);
+                }
+            }
+        }
+        return durationEpic;
+    }
+    @Override
+    public void setDurationEpic(EpicTask epictask) {
+        Duration newEpictaskDuration = generateDurationEpic(epictask);
+        epictask.setDuration(newEpictaskDuration);
+    }
+
+    public LocalDateTime generateEndTimeEpic(EpicTask epictask) {
+        LocalDateTime endTime = null;
+        Map<Integer, SubTask> subtasksOneEpic = selectSubtasksOneEpic(epictask);
+        if (!subtasksOneEpic.isEmpty()) {
+            for (SubTask task : subtasksOneEpic.values()) {
+                LocalDateTime time = task.getEndTime();
+                if (endTime == null || endTime.isBefore(time)) {
+                    endTime = time;
+                }
+            }
+        }
+        return endTime;
+    }
+
+    @Override
+    public void setEndTimeEpic(EpicTask epictask) {
+        LocalDateTime newEpictaskEndTime = generateEndTimeEpic(epictask);
+        epictask.setEndTime(newEpictaskEndTime);
+    }
+
+    public boolean sortPriorityTasks(Task newTask) {
+        boolean marker = false;
+        LocalDateTime newTaskStartTime = newTask.getStartTime();
+
+        if (!prioritizedSet.isEmpty() && newTaskStartTime != null) {
+            for (Task task : prioritizedSet) {
+                if (checkEpicRelationSubtask(newTask, task)) {
+                    System.out.println("Данная задача - эпик, имеющий подзадачи. Он не учитывается при формировании списка приоритетов!");
+                    marker = true;
+                    return marker;
+
+                }
+                if (!checkIntersectionTasks(newTask, task)) {
+                    continue;
+                }
+                System.out.println("Срок исполнения новой задачи частично или полностью совпадает со сроком ранее созданной задачи!");
+                System.out.println("Задача не создана! Необходимо изменить срок исполнения новой задачи!");
+                return marker;
+            }
+            prioritizedSet.add(newTask);
+        } else if (prioritizedSet.isEmpty() && newTaskStartTime != null) {
+            prioritizedSet.add(newTask);
+
+        } else if (newTaskStartTime == null) {
+            notPrioritizedList.add(newTask);
+        }
+        marker = true;
+        getPrioritizedTasks();
+        return marker;
+    }
+
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        List<Task> tasksList = new ArrayList<>();
+        tasksList.addAll(prioritizedSet);
+        tasksList.addAll(notPrioritizedList);
+        /*System.out.println("Задачи, отсортированные в порядке приоритета:");
+        for (Task task : tasksList) {
+            System.out.println("Задача " + task.getId() + " дата начала " + task.getStartTime());
+        }*/
+        return tasksList;
+    }
+
+    public boolean checkEpicRelationSubtask(Task newTask, Task oldTask) {
+        boolean marker = false;
+        if ((newTask instanceof EpicTask) && (oldTask instanceof SubTask)) {
+            List<Integer> subtasksList = ((EpicTask) newTask).getEpictaskSubtasks();
+            int subtaskId = ((SubTask) oldTask).getId();
+            if (subtasksList.contains(subtaskId)) {
+                marker = true;
+            }
+        }
+        return marker;
+    }
+
+    public boolean checkIntersectionTasks(Task newTask, Task oldTask) {
+        boolean marker = true;
+        LocalDateTime oldTaskStartTime = oldTask.getStartTime();
+        LocalDateTime oldTaskEndTime = oldTask.getEndTime();
+        LocalDateTime newTaskStartTime = newTask.getStartTime();
+        LocalDateTime newTaskEndTime = newTask.getEndTime();
+
+        boolean oldStartAfterNewEnd = oldTaskStartTime.isAfter(newTaskEndTime);
+        boolean newStartAfterOldEnd = newTaskStartTime.isAfter(oldTaskEndTime);
+        if (oldStartAfterNewEnd || newStartAfterOldEnd) {
+            marker = false;
+        }
+        return marker;
     }
 
 }

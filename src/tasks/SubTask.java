@@ -1,19 +1,22 @@
 package tasks;
+
 import basic.*;
-import managers.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class SubTask extends Task {
     private final int epicTaskId;
 
-    public SubTask(String name, String description, int id, Status status, int epicTaskId) {
-        super(name, description, id, status);
+    public SubTask(String name, String description, int id, Status status, LocalDateTime startTime, Duration duration, int epicTaskId) {
+        super(name, description, id, status, startTime, duration);
         this.epicTaskId = epicTaskId;
     }
 
     public int getSubtaskEpictaskId() {
         return epicTaskId;
     }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -25,4 +28,5 @@ public class SubTask extends Task {
     public int hashCode() {
         return Objects.hash(getId(), name, description, status,getSubtaskEpictaskId());
     }
+
 }

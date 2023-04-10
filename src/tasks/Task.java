@@ -1,6 +1,8 @@
 package tasks;
+
 import basic.*;
-import managers.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -8,6 +10,18 @@ public class Task {
     public final String name;
     public final String description;
     public Status status;
+    private LocalDateTime startTime;
+    private Duration duration;
+    private LocalDateTime endTime;
+
+    public Task(String name, String description, int id, Status status, LocalDateTime startTime, Duration duration) {
+        this.name = name;
+        this.description = description;
+        this.id = id;
+        this.status = status;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
 
     public Task(String name, String description, int id, Status status) {
         this.name = name;
@@ -25,6 +39,21 @@ public class Task {
     }
     public void setStatus(Status newStatus) {
         status = newStatus;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+    public void setEndTime(LocalDateTime newEndTime) {
+        endTime = newEndTime;
     }
 
     @Override

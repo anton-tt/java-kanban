@@ -8,7 +8,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     final Map<Integer, Node> nodeMap = new HashMap<>();
     final CustomLinkedList viewedTasksList = new CustomLinkedList();
 
-
     @Override
     public void addViewedTask(Task task) {
         int taskId = task.getId();
@@ -22,16 +21,9 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public List<Task> getHistory() {
         List<Task> listTask = viewedTasksList.getViewedTasks();
-
-        if (!listTask.isEmpty()) {
-            System.out.println("Список просмотренных задач:");
-            for (int i = 0; i < listTask.size(); i++) {
-                Task task = listTask.get(i);
-                System.out.println("Задача ID " + task.getId() + ": " + task.name);
-            }
-        } else {
+        /*if (!listTask.isEmpty()) {
             System.out.println("Список просмотренных задач вывести невозможно, задачи отсутствуют!");
-        }
+        }*/
         return listTask;
     }
 
