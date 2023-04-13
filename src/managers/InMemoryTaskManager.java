@@ -94,9 +94,6 @@ public class InMemoryTaskManager implements TaskManager {
                 allTasksList.add(entry.getValue());
             }
         }
-        /*if (allTasksList.isEmpty()) {
-            System.out.println("Список задач вывести невозможно, задачи отсутствуют!");
-        }*/
         return allTasksList;
     }
 
@@ -363,10 +360,6 @@ public class InMemoryTaskManager implements TaskManager {
         List<Task> tasksList = new ArrayList<>();
         tasksList.addAll(prioritizedSet);
         tasksList.addAll(notPrioritizedList);
-        /*System.out.println("Задачи, отсортированные в порядке приоритета:");
-        for (Task task : tasksList) {
-            System.out.println("Задача " + task.getId() + " дата начала " + task.getStartTime());
-        }*/
         return tasksList;
     }
 

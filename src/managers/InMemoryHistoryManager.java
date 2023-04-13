@@ -21,9 +21,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public List<Task> getHistory() {
         List<Task> listTask = viewedTasksList.getViewedTasks();
-        /*if (!listTask.isEmpty()) {
-            System.out.println("Список просмотренных задач вывести невозможно, задачи отсутствуют!");
-        }*/
         return listTask;
     }
 

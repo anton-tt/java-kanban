@@ -1,6 +1,3 @@
 id,type,name,status,description,startTime,duration,epic
 0,TASK,Задача 1,NEW,Описание Задачи 1,2023-01-01T12:00,360
-1,EPICTASK,Эпик 1,NEW,Описание Эпика 1,2023-05-10T06:00,480
-2,SUBTASK,Подзадача 1,NEW,Описание Подзадачи 1 эпика 1,2023-05-10T06:00,480,1
 
-1,0,2,

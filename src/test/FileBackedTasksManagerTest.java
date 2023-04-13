@@ -18,7 +18,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager>
 
     @Test
     public void putOneTask()  {
-        Task taskOne = generateTaskOne();
+        generateTaskOne();
         List<Task> historyList = taskManager.getListTasks();
         taskManager.save();
         FileBackedTasksManager newTaskManager = FileBackedTasksManager.loadFromFile(file);

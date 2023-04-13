@@ -112,8 +112,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 task.description;
         if(startTimeTask != null) {
             initialTaskString = initialTaskString + "," +
-                    (task.getStartTime()).toString() + "," +
-                    (task.getDuration()).toMinutes();
+                    startTimeTask + "," +
+                    durationTask.toMinutes();
         }
 
         if (subtaskEpictaskId != 0) {
