@@ -9,9 +9,14 @@ import java.util.Objects;
 
 public class EpicTask extends Task {
     private List<Integer> subTasks;
-    private LocalDateTime startTime;
-    private Duration duration;
-    private LocalDateTime endTime;
+   // private LocalDateTime startTime;
+   // private Duration duration;
+  //  private LocalDateTime endTime;
+
+    public EpicTask(String name, String description) {
+        super(name, description, Status.NEW);
+        subTasks = new ArrayList<>();
+    }
 
     public EpicTask(String name, String description, int id) {
         super(name, description, id, Status.NEW);
@@ -25,7 +30,7 @@ public class EpicTask extends Task {
         subTasks = newSubtasks;
     }
 
-    public LocalDateTime getStartTime() {
+    /*public LocalDateTime getStartTime() {
         return startTime;
     }
     public void setStartTime(LocalDateTime newStartTime) {
@@ -39,14 +44,13 @@ public class EpicTask extends Task {
         duration = newDuration;
     }
 
-
     public LocalDateTime getEndTime() {
         return endTime;
     }
     public void setEndTime(LocalDateTime newEndTime) {
         endTime = newEndTime;
     }
-
+*/
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

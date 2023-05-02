@@ -1,18 +1,35 @@
 package tasks;
 
 import basic.*;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class Task {
-    private final int id;
+    private int id;
     public final String name;
     public final String description;
     public Status status;
     private LocalDateTime startTime;
     private Duration duration;
     private LocalDateTime endTime;
+
+    public Task(String name, String description, Status status, String dateTime, long interval) {
+        this.name = name;
+        this.description = description;
+        id = 0;
+        this.status = status;
+        startTime = generateStartTimeTask(dateTime);
+        duration = generateDurationTask(interval);
+    }
+
+    public Task(String name, String description, Status status) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
+    }
 
     public Task(String name, String description, int id, Status status, LocalDateTime startTime, Duration duration) {
         this.name = name;
@@ -23,6 +40,7 @@ public class Task {
         this.duration = duration;
     }
 
+
     public Task(String name, String description, int id, Status status) {
         this.name = name;
         this.description = description;
@@ -32,6 +50,9 @@ public class Task {
 
     public int getId() {
         return id;
+    }
+    public void setId(int newId) {
+        id = newId;
     }
 
     public Status getStatus() {
@@ -56,6 +77,18 @@ public class Task {
         endTime = newEndTime;
     }
 
+
+    public LocalDateTime generateStartTimeTask(String dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        LocalDateTime startTime = LocalDateTime.parse(dateTime, formatter);
+        return startTime;
+    }
+    public Duration generateDurationTask(long minutes) {
+        Duration duration = Duration.ofMinutes(minutes);
+        return duration;
+    }
+
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -68,4 +101,13 @@ public class Task {
         return Objects.hash(getId(), name, description, status);
     }
 
+
+
+
+    public void setStartTime(LocalDateTime newStartTime) {
+        startTime = newStartTime;
+    }
+    public void setDuration(Duration newDuration) {
+        duration = newDuration;
+    }
 }

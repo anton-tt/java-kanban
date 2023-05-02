@@ -1,31 +1,34 @@
 package basic;
 
+import server.HttpTaskServer;
+import server.KVServer;
 import tasks.*;
 import managers.*;
-import managers.TaskManager;
-
-import java.io.File;
+import java.io.IOException;
 
 public class Main {
 
-    public static void main(String[] args) {
-        TaskManager taskManager = FileBackedTasksManager.loadFromFile(new File("resource\\fileWriter.csv"));
+    public static void main(String[] args) throws IOException, InterruptedException {
+        KVServer server = new KVServer();
+        server.start();
+        HttpTaskManager taskManager = Managers.getDefault();
+        HttpTaskServer taskServer = new HttpTaskServer();
+        taskServer.start();
+
         System.out.println("Создаём две простые задачи.");
         Task taskOne = new Task("Праздничн. обед",
                 "Из 9 блюд на 10 персон",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 1, 12, 00),
-                taskManager.generateDurationTask(240)
-                );
+                "01.05.2023 12:00",
+                240);
         taskManager.putNewTaskInMap(taskOne);
+        taskManager.getRequiredTask(1);
+
         Task taskTwo = new Task("Генеральн.уборка",
                 "На след. день после обеда",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 2, 12, 00),
-                taskManager.generateDurationTask(240)
-                );
+                "02.05.2023 12:00",
+                240);
         taskManager.putNewTaskInMap(taskTwo);
         System.out.println("Задачи:");
         printTask(taskOne);
@@ -33,38 +36,35 @@ public class Main {
 
         System.out.println("");
         System.out.println("Создаём два эпика без подзадач.");
-        EpicTask epicOne = new EpicTask("Путешествие", "Из Петербурга в Москву", taskManager.getNextId());
+        EpicTask epicOne = new EpicTask("Путешествие", "Из Петербурга в Москву");
         taskManager.putNewEpictaskInMap(epicOne);
-        EpicTask epicTwo = new EpicTask("Вернуться домой", "Транзитом через Минск", taskManager.getNextId());
+        EpicTask epicTwo = new EpicTask("Вернуться домой", "Транзитом через Минск");
         taskManager.putNewEpictaskInMap(epicTwo);
         System.out.println("Эпики:");
         printEpicTask(epicOne);
         printEpicTask(epicTwo);
 
-       System.out.println("");
+        System.out.println("");
         System.out.println("Создаём подзадачи для эпиков.");
         SubTask subOne = new SubTask("Петербург-Москва",
                 "Поезд",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 8, 6, 00),
-                taskManager.generateDurationTask(360),
+                "08.05.2023 06:00",
+                360,
                 epicOne.getId());
         taskManager.putNewSubtaskInMap(subOne);
         SubTask subTwo = new SubTask("Москва-Минск",
                 "Автобус",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 10, 6, 00),
-                taskManager.generateDurationTask(480),
+                "10.05.2023 06:00",
+                480,
                 epicTwo.getId());
         taskManager.putNewSubtaskInMap(subTwo);
         SubTask subThree = new SubTask("Минск-Петербург",
                 "Самолёт",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 12, 6, 00),
-                taskManager.generateDurationTask(600),
+                "12.05.2023 06:00",
+                600,
                 epicTwo.getId());
         taskManager.putNewSubtaskInMap(subThree);
         System.out.println("Эпики и их подзадачи:");
@@ -78,28 +78,23 @@ public class Main {
         System.out.println("Обновляем первую задачу, единственную подзадачу первого эпика, первую подзадачу второго эпика");
         Task taskNull = new Task("Праздничн. обед",
                 "Из 9 блюд на 10 персон",
-                taskManager.getNextId(),
                 Status.DONE,
-                taskManager.generateStartTimeTask(2023, 5, 1, 12, 00),
-                taskManager.generateDurationTask(240)
-                );
+                "01.05.2023 12:00",
+                240);
         taskManager.updateTask(taskOne, taskNull);
-        
         SubTask subFour = new SubTask("Петербург-Москва",
-                "Поезд", taskManager.getNextId(),
+                "Поезд",
                 Status.DONE,
-                taskManager.generateStartTimeTask(2023, 5, 8, 6, 00),
-                taskManager.generateDurationTask(360),
-                epicOne.getId()
-                );
+                "08.05.2023 06:00",
+                360,
+                epicOne.getId());
         taskManager.updateSubtask(subOne, subFour);
         SubTask subFive = new SubTask("Москва-Минск",
-                "Автобус", taskManager.getNextId(),
+                "Автобус",
                 Status.IN_PROGRESS,
-                taskManager.generateStartTimeTask(2023, 5, 10, 6, 00),
-                taskManager.generateDurationTask(480),
-                epicTwo.getId()
-                );
+                "10.05.2023 06:00",
+                480,
+                epicTwo.getId());
         taskManager.updateSubtask(subTwo, subFive);
         System.out.println("После обновления:");
         System.out.println("Задачи:");
@@ -114,12 +109,13 @@ public class Main {
         printSubTask(subFive);
 
         System.out.println("");
-        System.out.println("Удаляем первый эпик (id 2), проверяем - ищем его и подзадачу (id 8)");
-        taskManager.removeTask(2);
-        taskManager.getRequiredTask(2);
+        System.out.println("Удаляем первый эпик (id 3), проверяем - ищем его и подзадачу (id 9)");
+        taskManager.removeTask(3);
+        taskManager.getRequiredTask(3);
+        taskManager.getRequiredTask(9);
         taskManager.getRequiredTask(8);
         taskManager.getRequiredTask(6);
-        taskManager.getRequiredTask(9);
+
         System.out.println("");
         System.out.println("Просматриваем 10 произвольных задач (+ дополнительно) и выводим список просмотренных задач");
         for(int i = 0; i < 11; i++) {
@@ -137,35 +133,38 @@ public class Main {
 
         System.out.println("");
         System.out.println("Создаём третий эпик - конкурент");
-        EpicTask epicThree = new EpicTask("Выгорание", "Отменить праздничный обед", taskManager.getNextId());
+        EpicTask epicThree = new EpicTask("Выгорание", "Отменить праздничный обед");
         taskManager.putNewEpictaskInMap(epicThree);
         printEpicTask(epicThree);
         System.out.println("Создаём подзадачу третьего эпика");
         SubTask subSix = new SubTask("Лень",
                 "Никого не жду",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 1, 12, 00),
-                taskManager.generateDurationTask(720),
+                "01.05.2023 12:00",
+                720,
                 epicOne.getId());
         taskManager.putNewSubtaskInMap(subSix);
-        System.out.println("Эпик-конкурент и его подзадача (id 11):");
+        System.out.println("Эпик-конкурент(id 11) и его подзадача (id 12):");
         printEpicTask(epicThree);
         taskManager.getRequiredTask(11);
+        taskManager.getRequiredTask(12);
         printSubTask(subSix);
 
         System.out.println("");
         System.out.println("Создаём третью задачу с самым ранним сроком исполнения");
         Task taskThree = new Task("Продукты",
                 "Закупить для праздничн. обеда",
-                taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 4, 30, 19, 00),
-                taskManager.generateDurationTask(90)
+                "30.04.2023 19:00",
+                90
         );
         taskManager.putNewTaskInMap(taskThree);
         printTask(taskThree);
         taskManager.getPrioritizedTasks();
+
+        System.out.println("");
+        taskServer.stop();
+        server.stop();
     }
 
     public static void printTask(Task task) {
@@ -199,5 +198,5 @@ public class Main {
         System.out.println("Эпик подзадачи: " + task.getSubtaskEpictaskId());
 
     }
-
+    
 }

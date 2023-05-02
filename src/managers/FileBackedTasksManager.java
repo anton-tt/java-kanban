@@ -8,9 +8,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import exception.ManagerSaveException;
 import basic.Type;
-import tasks.*;
 import basic.Status;
-
+import tasks.*;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private Path repository;
@@ -18,7 +17,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     public FileBackedTasksManager(String file) {
         repository = Paths.get(file);
     }
-    private HistoryManager historyManager = Managers.getDefaultHistory();
+    public FileBackedTasksManager() {
+    }
+    HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
     public void putNewTaskInMap(Task task) {
@@ -40,7 +41,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
     @Override
     public List<Task> getListTasks(){
-        super.getListTasks();
+        List<Task> allTasksList = super.getListTasks();
         save();
         return allTasksList;
     }
@@ -62,12 +63,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         Task requiredTask = super.getRequiredTask(id);
         save();
         return requiredTask;
-    }
-    @Override
-    public List<Task> getHistory(){
-        List<Task> listViewedTask = historyManager.getHistory();
-        save();
-        return listViewedTask;
     }
 
     @Override
@@ -93,7 +88,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         Type typeTask = null;
         LocalDateTime startTimeTask = task.getStartTime();
         Duration durationTask = task.getDuration();
-        int subtaskEpictaskId = 0;
+        int subtaskEpictaskId = -1;
         if (task instanceof EpicTask) {
             typeTask = Type.EPICTASK;
         }
@@ -110,13 +105,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 task.name + "," +
                 task.getStatus() + "," +
                 task.description;
-        if(startTimeTask != null) {
+        if (startTimeTask != null) {
             initialTaskString = initialTaskString + "," +
                     startTimeTask + "," +
                     durationTask.toMinutes();
         }
 
-        if (subtaskEpictaskId != 0) {
+        if (subtaskEpictaskId != -1) {
             taskString = initialTaskString + "," + subtaskEpictaskId;
         } else {
             taskString = initialTaskString;
@@ -207,7 +202,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }
     }
 
-    public static FileBackedTasksManager loadFromFile(File file) {
+   public static FileBackedTasksManager loadFromFile(File file) {
         FileBackedTasksManager currentInstance = new FileBackedTasksManager(file.getPath());
 
         try (Reader fileReader = new FileReader(file);
@@ -219,12 +214,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     break;
                 }
                 Task task = fromString(element);
+                int taskId = task.getId();
                 if (task instanceof EpicTask) {
-                    currentInstance.putNewEpictaskInMap((EpicTask) task);
+                    currentInstance.putReconstructedEpictaskInMap((EpicTask) task);
                 } else if (task instanceof SubTask) {
-                    currentInstance.putNewSubtaskInMap((SubTask) task);
+                    currentInstance.putReconstructedSubtaskInMap((SubTask) task);
                 } else if (task != null) {
-                    currentInstance.putNewTaskInMap(task);
+                    currentInstance.putReconstructedTaskInMap(task);
                 }
             }
             String elHistory = bufferReader.readLine();

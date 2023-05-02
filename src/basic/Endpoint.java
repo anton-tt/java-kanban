@@ -1,0 +1,22 @@
+package basic;
+
+public enum Endpoint {
+    GET_TASKS_ALL,
+    GET_TASK,
+    GET_EPIC,
+    GET_SUBTASK,
+    GET_HISTORY,
+    GET_PRIORITIZED,
+
+    POST_UPDATE_TASK,
+    POST_UPDATE_EPIC,
+    POST_UPDATE_SUBTASK,
+
+    DELETE_TASKS_ALL,
+    DELETE_TASK,
+    DELETE_EPIC,
+    DELETE_SUBTASK,
+
+    UNKNOWN
+
+}

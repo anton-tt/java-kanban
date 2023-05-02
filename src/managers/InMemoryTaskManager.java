@@ -2,23 +2,21 @@ package managers;
 
 import tasks.*;
 import basic.*;
-
 import java.util.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private HistoryManager historyManager = Managers.getDefaultHistory();
+    private final HistoryManager historyManager = Managers.getDefaultHistory();
 
     protected final Map<Integer, Task> taskMap = new HashMap<>();
     protected final Map<Integer, SubTask> subtaskMap = new HashMap<>();
     protected final Map<Integer, EpicTask> epicMap = new HashMap<>();
-    protected final List<Task> allTasksList = new ArrayList<>();
     Set<Task> prioritizedSet = new TreeSet<>(Comparator.comparing(Task::getStartTime));
     List<Task> notPrioritizedList = new ArrayList<>();
 
-    private int nextId = 0;
+    private int nextId = 1;
 
     @Override
     public int getNextId() {
@@ -52,6 +50,7 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime endTime = generateEndTimeTask(task);
         task.setEndTime(endTime);
         if (sortPriorityTasks(task)) {
+            task.setId(getNextId());
             taskMap.put(task.getId(), task);
         }
     }
@@ -59,6 +58,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void putNewEpictaskInMap(EpicTask epictask) {
         if (sortPriorityTasks(epictask)) {
+            epictask.setId(getNextId());
             epicMap.put(epictask.getId(), epictask);
         }
     }
@@ -68,6 +68,7 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime endTime = generateEndTimeTask(subtask);
         subtask.setEndTime(endTime);
         if (sortPriorityTasks(subtask)) {
+            subtask.setId(getNextId());
             subtaskMap.put(subtask.getId(), subtask);
             EpicTask subtaskEpictask = epicMap.get(subtask.getSubtaskEpictaskId());
             if(notPrioritizedList.contains(subtaskEpictask)) {
@@ -78,7 +79,32 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
+    public void putReconstructedTaskInMap(Task task) {
+        LocalDateTime endTime = generateEndTimeTask(task);
+        task.setEndTime(endTime);
+            taskMap.put(task.getId(), task);
+    }
+
+    @Override
+    public void putReconstructedEpictaskInMap(EpicTask epictask) {
+            epicMap.put(epictask.getId(), epictask);
+    }
+
+    @Override
+    public void putReconstructedSubtaskInMap(SubTask subtask) {
+        LocalDateTime endTime = generateEndTimeTask(subtask);
+        subtask.setEndTime(endTime);
+            subtaskMap.put(subtask.getId(), subtask);
+            EpicTask subtaskEpictask = epicMap.get(subtask.getSubtaskEpictaskId());
+            if(notPrioritizedList.contains(subtaskEpictask)) {
+                removePrioritizedTask(subtaskEpictask);
+            }
+            updateEpictask(subtaskEpictask);
+        }
+
+    @Override
     public List<Task> getListTasks() {
+        List<Task> allTasksList = new ArrayList<>();
         if (!taskMap.isEmpty()) {
             for (Map.Entry<Integer, Task> entry : taskMap.entrySet()) {
                 allTasksList.add(entry.getValue());
@@ -108,9 +134,6 @@ public class InMemoryTaskManager implements TaskManager {
         if (!epicMap.isEmpty()) {
             epicMap.clear();
         }
-        if (!allTasksList.isEmpty()) {
-            allTasksList.clear();
-        }
     }
 
     @Override
@@ -125,6 +148,10 @@ public class InMemoryTaskManager implements TaskManager {
         }
         if (requiredTask != null) {
             historyManager.addViewedTask(requiredTask);
+            System.out.println("Задача с ID " + id + " есть");
+        }
+        else  {
+            System.out.println("Задача с ID " + id + " отсутствует");
         }
         return requiredTask;
     }
@@ -187,7 +214,6 @@ public class InMemoryTaskManager implements TaskManager {
         taskMap.remove(oldTask.getId());
         removePrioritizedTask(oldTask);
         putNewTaskInMap(newTask);
-
     }
 
     @Override
@@ -360,6 +386,10 @@ public class InMemoryTaskManager implements TaskManager {
         List<Task> tasksList = new ArrayList<>();
         tasksList.addAll(prioritizedSet);
         tasksList.addAll(notPrioritizedList);
+        /*for (Task task : tasksList) {
+            System.out.println("Задачи по приоритету");
+            System.out.println("Задача " + task.getId() + " название " + task.name + " начало " + task.getStartTime());
+        }*/
         return tasksList;
     }
 

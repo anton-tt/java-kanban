@@ -19,6 +19,10 @@ public interface TaskManager {
     void putNewEpictaskInMap(EpicTask epictask);
     void putNewSubtaskInMap(SubTask subtask);
 
+    void putReconstructedTaskInMap(Task task);
+    void putReconstructedEpictaskInMap(EpicTask epictask);
+    void putReconstructedSubtaskInMap(SubTask subtask);
+
     List<Task> getListTasks();
     void clearMapTasks();
     void removeTask(int id);
