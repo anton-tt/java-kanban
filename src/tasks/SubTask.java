@@ -27,7 +27,11 @@ public class SubTask extends Task {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         SubTask otherSubTask = (SubTask) obj;
-        return Objects.equals(name, otherSubTask.name) && Objects.equals(description, otherSubTask.description) && Objects.equals(status, otherSubTask.status) && (getSubtaskEpictaskId() == otherSubTask.getSubtaskEpictaskId()) && (getId() == otherSubTask.getId());
+        return Objects.equals(name, otherSubTask.name) &&
+                Objects.equals(description, otherSubTask.description) &&
+                Objects.equals(status, otherSubTask.status) &&
+                (getSubtaskEpictaskId() == otherSubTask.getSubtaskEpictaskId()) &&
+                (getId() == otherSubTask.getId());
     }
     @Override
     public int hashCode() {

@@ -135,11 +135,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }        Task task = null;
         if(typeTask.equals(Type.TASK)) {
             task = new Task(name, description, id, status, startTime, duration);
-
         } else if (typeTask.equals(Type.SUBTASK)) {
             int subtaskEpictaskId = Integer.parseInt(taskString[7]);
             task = new SubTask(name, description, id, status, startTime, duration, subtaskEpictaskId);
-        } else if (typeTask.equals(Type.EPICTASK)) {
+        } else {
             task = new EpicTask(name, description, id);
         }
         return task;
@@ -158,8 +157,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 historyStringBuilder.append(task.getId());
             }
         }
-        String historyString = historyStringBuilder.toString();
-        return historyString;
+        return historyStringBuilder.toString();
     }
 
     public static List<Integer> historyFromString(String value) {
@@ -167,7 +165,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         if (!value.isBlank()) {
             String[] tasksId = value.split(",");
             for(int i = 0; i < tasksId.length; i++) {
-                Integer id = Integer.parseInt(/*taskId*/tasksId[i]);
+                Integer id = Integer.parseInt(tasksId[i]);
                 listTaskId.add(id);
             }
         }
@@ -214,12 +212,11 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     break;
                 }
                 Task task = fromString(element);
-                int taskId = task.getId();
                 if (task instanceof EpicTask) {
                     currentInstance.putReconstructedEpictaskInMap((EpicTask) task);
                 } else if (task instanceof SubTask) {
                     currentInstance.putReconstructedSubtaskInMap((SubTask) task);
-                } else if (task != null) {
+                } else {
                     currentInstance.putReconstructedTaskInMap(task);
                 }
             }

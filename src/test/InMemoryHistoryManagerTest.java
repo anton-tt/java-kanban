@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import basic.Status;
 import managers.*;
 import tasks.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +19,8 @@ class InMemoryHistoryManagerTest {
                 "Описание Задачи 1",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 1, 1, 12, 00),
-                taskManager.generateDurationTask(360));
+                generateStartTimeTask(2023, 1, 1, 12, 0),
+                generateDurationTask(360));
         return taskOne;
     }
 
@@ -27,8 +29,8 @@ class InMemoryHistoryManagerTest {
                 "Описание Задачи 2",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 7, 1, 12, 00),
-                taskManager.generateDurationTask(360));
+                generateStartTimeTask(2023, 7, 1, 12, 0),
+                generateDurationTask(360));
         return taskOne;
     }
 
@@ -47,12 +49,21 @@ class InMemoryHistoryManagerTest {
                 "Описание Подзадачи 1 эпика 1",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 10, 6, 00),
-                taskManager.generateDurationTask(480),
+                generateStartTimeTask(2023, 5, 10, 6, 0),
+                generateDurationTask(480),
                 epicId);
         return subOne;
     }
 
+    public LocalDateTime generateStartTimeTask(int year, int month, int day, int hour, int minute) {
+        LocalDateTime startTime = LocalDateTime.of(year, month, day, hour, minute);
+        return startTime;
+    }
+
+    public Duration generateDurationTask(long minutes) {
+        Duration duration = Duration.ofMinutes(minutes);
+        return duration;
+    }
     @Test
     public void getHistoryNull() {
         List<Task> historyList = taskManager.getHistory();

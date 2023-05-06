@@ -7,32 +7,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class InMemoryTaskManager implements TaskManager {
-
     private final HistoryManager historyManager = Managers.getDefaultHistory();
-
     protected final Map<Integer, Task> taskMap = new HashMap<>();
     protected final Map<Integer, SubTask> subtaskMap = new HashMap<>();
     protected final Map<Integer, EpicTask> epicMap = new HashMap<>();
-    Set<Task> prioritizedSet = new TreeSet<>(Comparator.comparing(Task::getStartTime));
-    List<Task> notPrioritizedList = new ArrayList<>();
+    protected final Set<Task> prioritizedSet = new TreeSet<>(Comparator.comparing(Task::getStartTime));
+    protected final List<Task> notPrioritizedList = new ArrayList<>();
 
     private int nextId = 1;
 
     @Override
     public int getNextId() {
         return nextId++;
-    }
-
-    @Override
-    public LocalDateTime generateStartTimeTask(int year, int month, int day, int hour, int minute) {
-        LocalDateTime startTime = LocalDateTime.of(year, month, day, hour, minute);
-        return startTime;
-    }
-
-    @Override
-    public Duration generateDurationTask(long minutes) {
-        Duration duration = Duration.ofMinutes(minutes);
-        return duration;
     }
 
     public LocalDateTime generateEndTimeTask(Task task) {
@@ -87,7 +73,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void putReconstructedEpictaskInMap(EpicTask epictask) {
-            epicMap.put(epictask.getId(), epictask);
+        epicMap.put(epictask.getId(), epictask);
     }
 
     @Override
@@ -138,17 +124,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task getRequiredTask(int id) {
-        Task requiredTask = null;
+        Task requiredTask;
         if (taskMap.containsKey(id)) {
             requiredTask = taskMap.get(id);
         } else if (subtaskMap.containsKey(id)) {
             requiredTask = subtaskMap.get(id);
         } else if (epicMap.containsKey(id)) {
             requiredTask = epicMap.get(id);
+        } else {
+            requiredTask = null;
         }
+
         if (requiredTask != null) {
             historyManager.addViewedTask(requiredTask);
-            System.out.println("Задача с ID " + id + " есть");
+            System.out.println("Задача с ID " + id + " имеется");
         }
         else  {
             System.out.println("Задача с ID " + id + " отсутствует");
@@ -158,19 +147,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task discoverTask(int id) {
-        Task requiredTask = null;
+        Task requiredTask;
         if (taskMap.containsKey(id)) {
             requiredTask = taskMap.get(id);
         } else if (subtaskMap.containsKey(id)) {
             requiredTask = subtaskMap.get(id);
         } else if (epicMap.containsKey(id)) {
             requiredTask = epicMap.get(id);
+        } else {
+            requiredTask = null;
         }
         return requiredTask;
     }
 
     public List<Task> getHistory() {
-        return historyManager.getHistory();
+        return new ArrayList<>(historyManager.getHistory());
     }
 
     @Override
@@ -198,6 +189,8 @@ public class InMemoryTaskManager implements TaskManager {
             }
             removePrioritizedTask(epicTask);
             epicMap.remove(id);
+        } else {
+            System.out.println("Задача с id=" + id + " отсутствует, удалить невозможно");
         }
     }
 
@@ -360,7 +353,6 @@ public class InMemoryTaskManager implements TaskManager {
                     System.out.println("Данная задача - эпик, имеющий подзадачи. Он не учитывается при формировании списка приоритетов!");
                     marker = true;
                     return marker;
-
                 }
                 if (!checkIntersectionTasks(newTask, task)) {
                     continue;
@@ -373,7 +365,7 @@ public class InMemoryTaskManager implements TaskManager {
         } else if (prioritizedSet.isEmpty() && newTaskStartTime != null) {
             prioritizedSet.add(newTask);
 
-        } else if (newTaskStartTime == null) {
+        } else {
             notPrioritizedList.add(newTask);
         }
         marker = true;
@@ -386,10 +378,6 @@ public class InMemoryTaskManager implements TaskManager {
         List<Task> tasksList = new ArrayList<>();
         tasksList.addAll(prioritizedSet);
         tasksList.addAll(notPrioritizedList);
-        /*for (Task task : tasksList) {
-            System.out.println("Задачи по приоритету");
-            System.out.println("Задача " + task.getId() + " название " + task.name + " начало " + task.getStartTime());
-        }*/
         return tasksList;
     }
 

@@ -1,7 +1,6 @@
 package tasks;
 
 import basic.*;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,7 +39,6 @@ public class Task {
         this.duration = duration;
     }
 
-
     public Task(String name, String description, int id, Status status) {
         this.name = name;
         this.description = description;
@@ -65,9 +63,15 @@ public class Task {
     public LocalDateTime getStartTime() {
         return startTime;
     }
+    public void setStartTime(LocalDateTime newStartTime) {
+        startTime = newStartTime;
+    }
 
     public Duration getDuration() {
         return duration;
+    }
+    public void setDuration(Duration newDuration) {
+        duration = newDuration;
     }
 
     public LocalDateTime getEndTime() {
@@ -77,37 +81,29 @@ public class Task {
         endTime = newEndTime;
     }
 
-
     public LocalDateTime generateStartTimeTask(String dateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-        LocalDateTime startTime = LocalDateTime.parse(dateTime, formatter);
+        startTime = LocalDateTime.parse(dateTime, formatter);
         return startTime;
     }
     public Duration generateDurationTask(long minutes) {
-        Duration duration = Duration.ofMinutes(minutes);
+        duration = Duration.ofMinutes(minutes);
         return duration;
     }
-
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Task otherTask = (Task) obj;
-        return Objects.equals(name, otherTask.name) && Objects.equals(description, otherTask.description) && Objects.equals(status, otherTask.status) && (getId() == otherTask.getId());
+        return Objects.equals(name, otherTask.name) &&
+                Objects.equals(description, otherTask.description) &&
+                Objects.equals(status, otherTask.status) &&
+                (getId() == otherTask.getId());
     }
     @Override
     public int hashCode() {
         return Objects.hash(getId(), name, description, status);
     }
 
-
-
-
-    public void setStartTime(LocalDateTime newStartTime) {
-        startTime = newStartTime;
-    }
-    public void setDuration(Duration newDuration) {
-        duration = newDuration;
-    }
 }

@@ -7,8 +7,6 @@ import java.util.List;
 
 public interface TaskManager {
     int getNextId();
-    LocalDateTime generateStartTimeTask(int year, int month, int day, int hour, int minute);
-    Duration generateDurationTask(long minutes);
 
     void setStatusEpic(EpicTask epictask);
     void setStartTimeEpic(EpicTask epictask);

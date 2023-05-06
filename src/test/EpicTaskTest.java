@@ -18,8 +18,8 @@ class EpicTaskTest {
                 "Автобус",
                 taskManager.getNextId(),
                 statusOne,
-                taskManager.generateStartTimeTask(2023, 5, 10, 6, 00),
-                taskManager.generateDurationTask(480),
+                generateStartTimeTask(2023, 5, 10, 6, 0),
+                generateDurationTask(480),
                 epicOne.getId());
         taskManager.putNewSubtaskInMap(subOne);
 
@@ -27,8 +27,8 @@ class EpicTaskTest {
                 "Самолёт",
                 taskManager.getNextId(),
                 statusTwo,
-                taskManager.generateStartTimeTask(2023, 5, 12, 6, 00),
-                taskManager.generateDurationTask(600),
+                generateStartTimeTask(2023, 5, 12, 6, 0),
+                generateDurationTask(600),
                 epicOne.getId());
         taskManager.putNewSubtaskInMap(subTwo);
     }
@@ -38,12 +38,21 @@ class EpicTaskTest {
                 "Автобус",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(year, month, day, hour, minute),
-                taskManager.generateDurationTask(minutes),
+                generateStartTimeTask(year, month, day, hour, minute),
+                generateDurationTask(minutes),
                 epicOne.getId());
         taskManager.putNewSubtaskInMap(subThree);
     }
 
+    public LocalDateTime generateStartTimeTask(int year, int month, int day, int hour, int minute) {
+        LocalDateTime startTime = LocalDateTime.of(year, month, day, hour, minute);
+        return startTime;
+    }
+
+    public Duration generateDurationTask(long minutes) {
+        Duration duration = Duration.ofMinutes(minutes);
+        return duration;
+    }
     @BeforeEach
         public void beforeEach() {
         taskManager = new InMemoryTaskManager();
@@ -106,8 +115,8 @@ class EpicTaskTest {
 
     @Test
     public void setStartTimeAndDurationEpicSubtaskOne() {
-        generateSubtask(2023, 6, 1, 12, 00, 360);
-        LocalDateTime standardStartTime = LocalDateTime.of(2023, 6, 1, 12, 00);
+        generateSubtask(2023, 6, 1, 12, 0, 360);
+        LocalDateTime standardStartTime = LocalDateTime.of(2023, 6, 1, 12, 0);
         LocalDateTime epicStartTime = epicOne.getStartTime();
         Duration standardDuration = Duration.ofMinutes(360);
         Duration epicDuration =  epicOne.getDuration();
@@ -121,9 +130,9 @@ class EpicTaskTest {
 
     @Test
     public void setStartTimeAndDurationEpicSubtaskTwo() {
-        generateSubtask(2023, 6, 1, 12, 00, 360);
-        generateSubtask(2023, 6, 1, 18, 01, 180);
-        LocalDateTime standardStartTime = LocalDateTime.of(2023, 6, 1, 12, 00);
+        generateSubtask(2023, 6, 1, 12, 0, 360);
+        generateSubtask(2023, 6, 1, 18, 1, 180);
+        LocalDateTime standardStartTime = LocalDateTime.of(2023, 6, 1, 12, 0);
         LocalDateTime epicStartTime = epicOne.getStartTime();
         Duration standardDuration = Duration.ofMinutes(540);
         Duration epicDuration =  epicOne.getDuration();
@@ -137,7 +146,7 @@ class EpicTaskTest {
 
     @Test
     public void setStartTimeAndDurationEpicSubtaskRemove() {
-        generateSubtask(2023, 6, 1, 12, 00, 360);
+        generateSubtask(2023, 6, 1, 12, 0, 360);
         LocalDateTime epicStartTime = epicOne.getStartTime();
         Duration epicDuration =  epicOne.getDuration();
         int subtaskId = (epicOne.getEpictaskSubtasks()).get(0);

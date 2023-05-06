@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import tasks.EpicTask;
 import tasks.SubTask;
 import tasks.Task;
-
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +22,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "Описание Задачи 1",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 1, 1, 12, 00),
-                taskManager.generateDurationTask(360));
+                generateStartTimeTask(2023, 1, 1, 12, 0),
+                generateDurationTask(360));
         taskManager.putNewTaskInMap(taskOne);
         return taskOne;
     }
@@ -32,8 +33,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "Описание Задачи 2",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 7, 1, 12, 00),
-                taskManager.generateDurationTask(360));
+                generateStartTimeTask(2023, 7, 1, 12, 0),
+                generateDurationTask(360));
         taskManager.putNewTaskInMap(taskOne);
         return taskOne;
     }
@@ -56,11 +57,21 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "Описание Подзадачи 1 эпика 1",
                 taskManager.getNextId(),
                 Status.NEW,
-                taskManager.generateStartTimeTask(2023, 5, 10, 6, 00),
-                taskManager.generateDurationTask(480),
+                generateStartTimeTask(2023, 5, 10, 6, 0),
+                generateDurationTask(480),
                 epicOne.getId());
         taskManager.putNewSubtaskInMap(subOne);
         return subOne;
+    }
+
+    public LocalDateTime generateStartTimeTask(int year, int month, int day, int hour, int minute) {
+        LocalDateTime startTime = LocalDateTime.of(year, month, day, hour, minute);
+        return startTime;
+    }
+
+    public Duration generateDurationTask(long minutes) {
+        Duration duration = Duration.ofMinutes(minutes);
+        return duration;
     }
 
     @Test
@@ -215,8 +226,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "Обновлённая",
                 taskManager.getNextId(),
                 Status.DONE,
-                taskManager.generateStartTimeTask(2023, 1, 1, 12, 00),
-                taskManager.generateDurationTask(360)
+                generateStartTimeTask(2023, 1, 1, 12, 0),
+                generateDurationTask(360)
         );
         taskManager.updateTask(oldTask, newTask);
         Task discoveredOldTask = taskManager.discoverTask(oldtaskId);
@@ -236,8 +247,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "Обновлённая",
                 taskManager.getNextId(),
                 Status.DONE,
-                taskManager.generateStartTimeTask(2023, 5, 10, 6, 00),
-                taskManager.generateDurationTask(480),
+                generateStartTimeTask(2023, 5, 10, 6, 0),
+                generateDurationTask(480),
                 epicId);
 
         EpicTask epic = (EpicTask) taskManager.discoverTask(epicId);
